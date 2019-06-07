@@ -8,29 +8,29 @@ exports.getAllUserOrders = (userId, cb) => {
     if(result.length === 0)
       return cb("userId does not exist", null);
 
-    db.query("SELECT * FROM tbl_user WHERE userId=?", result[0].userId, (err, objUserId) => {
+    db.query("SELECT * FROM tbl_user WHERE userId=?", result[0].userId, (err, userObj) => {
       if(err)
         cb(err, null);
 
       //replace int userId with its object version
-      result[0].userId = objUserId[0];  
+      result[0].userId = userObj[0];  
     });
 
-    db.query("SELECT * FROM tbl_car WHERE carId=?", result[0].carId1, (err, objCarId1) => {
+    db.query("SELECT * FROM tbl_car WHERE carId=?", result[0].carId1, (err, car1Obj) => {
       if(err)
         cb(err, null);
 
       //replace int carId1 with its object version
-      result[0].carId1 = objCarId1[0];  
+      result[0].carId1 = car1Obj[0];  
     });
 
-    db.query("SELECT * FROM tbl_car WHERE carId=?", result[0].carId2, (err, objCarId2) => {
+    db.query("SELECT * FROM tbl_car WHERE carId=?", result[0].carId2, (err, car2Obj) => {
       if(err) {
-        cb(null, result);  //full result with objUserId and objCarId1
+        cb(null, result);  //full result with userObj and car1Obj
       }
       else {
-        result[0].carId2 = objCarId2[0]; //replace int carId2 with its object version
-        cb(null, result);                //full result with objUserId, objCarId1, objCarId2
+        result[0].carId2 = car2Obj[0]; //replace int carId2 with its object version
+        cb(null, result);              //full result with userObj, car1Obj, car2Obj
       } 
     });
   });
