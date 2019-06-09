@@ -48,8 +48,22 @@ routes.get("/orders/user/:id", (req, res) => {
   });
 });
 
+//get all items from an order
+routes.get("/order/:id/items", (req, res) => {
+  var orderId = req.params.id;
+
+  ordersDao.getAllItemsFromOrder(orderId, (err, result) => {
+    if(err) {
+      res.status(400).json({"error": err});
+    } 
+    else {
+      res.status(200).send(result);
+    }
+  });
+});
+
 //add an order
-routes.post("/orders", (req, res) => {
+routes.post("/orderPurchased", (req, res) => {
   var order = req.body;
 
   ordersDao.addOrder(order, (err, result) => {
