@@ -46,27 +46,73 @@ exports.getAllItemsFromOrder = (orderId, cb) => {
 };
 
 exports.addOrder = (order, cb) => {
-  var boughtCarsArray = order.boughtCars;
+  var totalPrice = 0;
+  var counter = 0;
+  order.boughtCars.forEach((id) => {
+    db.query("SELECT price FROM tbl_car WHERE carId=?", id, (err, result) => {      
+      if(err) return cb(err, null);
 
-  db.query(
-    `INSERT INTO tbl_order (userId, totalPrice, purchaseDate) VALUES (?,?,?)`,
-    [order.userId, order.totalPrice, order.purchaseDate],
+      totalPrice = totalPrice + result[0].price;
+
+      counter++;
+      if(counter === order.boughtCars.length) {
+        useTotalPrice(order, totalPrice, cb);
+      }
+    });
+  });
+}
+
+useTotalPrice = (order, totalPrice, cb) => {
+  db.query(`INSERT INTO tbl_order (userId, totalPrice, purchaseDate) VALUES (?,?,?)`,
+    [order.userId, totalPrice, order.purchaseDate],
     (err, result) => {
-      if(err) 
-        cb(err, null);
+      if(err) return cb(err, null);
 
       //get orderId of last row in tbl_order
-      db.query("SELECT orderId FROM tbl_order ORDER BY orderId DESC LIMIT 1", (err, lastRow) => { 
-        
+      db.query("SELECT orderId FROM tbl_order ORDER BY orderId DESC LIMIT 1", (err, lastRow) => {    
+        if(err) return cb(err, null);
+
         var counter = 0;
-        boughtCarsArray.forEach((ele) => {
+        order.boughtCars.forEach((id) => {
           //insert orderitems using just created orderId
-          db.query("INSERT INTO tbl_orderitem (orderId, carId) VALUES (?,?)", [lastRow[0].orderId, ele], (err, result) => {
-            counter++;
-            if(counter === boughtCarsArray.length)
-              cb();
+          db.query("INSERT INTO tbl_orderitem (orderId, carId) VALUES (?,?)", 
+            [lastRow[0].orderId, id], 
+            (err, result) => {
+              counter++;
+              if(counter === order.boughtCars.length)
+                updateNumCarsAvailable(order, cb);
           });
         });
       });
+  });
+}
+
+updateNumCarsAvailable = (order, cb) => {
+  var carsMap = new Map();
+  var boughtCarsArray = order.boughtCars;
+
+  //store bought car quantities in a map
+  for(var i=0; i<boughtCarsArray.length; i++) {
+    if(carsMap.has(boughtCarsArray[i]))
+      carsMap.set(boughtCarsArray[i], carsMap.get(boughtCarsArray[i]) + 1);
+    else
+      carsMap.set(boughtCarsArray[i], 1);
+  }
+
+  //update car availability
+  var counter = 0;
+  carsMap.forEach((key, value) => {
+    db.query("SELECT numAvailable FROM tbl_car WHERE carId=?", key, (err, numAvail) => {
+      if(err) return cb(err, null);
+      var subtractNumAvail = numAvail[0].numAvailable - carsMap.get(key);
+
+      db.query("UPDATE tbl_car SET numAvailable=? WHERE carId=?", 
+        [subtractNumAvail, key], 
+        (err, result) => {
+          counter++;
+          if(counter === carsMap.size)
+            cb();  //all done
+      });
+    });
   });
 }
