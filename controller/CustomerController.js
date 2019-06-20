@@ -5,7 +5,7 @@ var userDao = require("../dao/UserDao");
 
 
 //get all cars of a type
-routes.get("/cars/:carType", (req, res) => {
+routes.get("/customer/cars/:carType", (req, res) => {
   var carType = req.params.carType;
 
   carsDao.getAllCarsOfType(carType, (err, result) => {
@@ -19,7 +19,7 @@ routes.get("/cars/:carType", (req, res) => {
 });
 
 //get one car of a type
-routes.get("/cars/:carType/:carId", (req, res) => {
+routes.get("/customer/cars/:carType/:carId", (req, res) => {
   var carType = req.params.carType;
   var carId = req.params.carId;
 
@@ -35,7 +35,7 @@ routes.get("/cars/:carType/:carId", (req, res) => {
 
 
 //get all orders for specific user
-routes.get("/orders/user/:id", (req, res) => {
+routes.get("/customer/orders/user/:id", (req, res) => {
   var userId = req.params.id;
 
   ordersDao.getAllUserOrders(userId, (err, result) => {
@@ -49,7 +49,7 @@ routes.get("/orders/user/:id", (req, res) => {
 });
 
 //get all items from an order
-routes.get("/order/:id/items", (req, res) => {
+routes.get("/customer/order/:id/items", (req, res) => {
   var orderId = req.params.id;
 
   ordersDao.getAllItemsFromOrder(orderId, (err, result) => {
@@ -63,7 +63,7 @@ routes.get("/order/:id/items", (req, res) => {
 });
 
 //add an order
-routes.post("/orderPurchased", (req, res) => {
+routes.post("/customer/orderPurchased", (req, res) => {
   var order = req.body;
 
   ordersDao.addOrder(order, (err, result) => {
@@ -78,7 +78,7 @@ routes.post("/orderPurchased", (req, res) => {
 
 
 //get a user
-routes.get("/user/:id", (req, res) => {
+routes.get("/customer/user/:id", (req, res) => {
   var userId = req.params.id;
 
   userDao.getUser(userId, (err, result) => {
@@ -92,7 +92,7 @@ routes.get("/user/:id", (req, res) => {
 });
 
 //add a user
-routes.post("/user", (req, res) => {
+routes.post("/customer/user", (req, res) => {
   var user = req.body;
 
   userDao.addUser(user, (err, result) => {
@@ -106,7 +106,7 @@ routes.post("/user", (req, res) => {
 });
 
 //update a user
-routes.put("/user/:id", (req, res) => {
+routes.put("/customer/user/:id", (req, res) => {
   var user = req.body;
   var userId = req.params.id;
 
@@ -121,7 +121,7 @@ routes.put("/user/:id", (req, res) => {
 });
 
 //delete a user
-routes.delete("/user/:id", (req, res) => {
+routes.delete("/customer/user/:id", (req, res) => {
   var userId = req.params.id;
 
   userDao.deleteUser(userId, (err, result) => {
