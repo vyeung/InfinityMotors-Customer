@@ -2,48 +2,108 @@ var db = require("../utils/db");
 
 
 exports.getAllUserOrders = (userId, cb) => {
-  db.query("SELECT * FROM tbl_order WHERE userId=?", userId, (err, result) => {
+  var sql = `SELECT * FROM tbl_order 
+             JOIN tbl_user ON tbl_user.userId = tbl_order.userId 
+             WHERE tbl_order.userId = ?`;
+  
+  db.query(sql, userId, (err, result) => {
     if(err)
       return cb(err, null);
     if(result.length === 0)
       return cb(`userId=${userId} does not exist`, null);
 
-    var counter = 0;
-    result.forEach((obj) => {
-      db.query("SELECT * FROM tbl_user WHERE userId=?", obj.userId, (err, userObj) => {
-        //replace userId with its object version
-        result[counter].userId = userObj[0];  
-
-        counter++;
-        if(counter === result.length) {
-          cb(null, result);  //sends final result when forEach is done
-        } 
-      });
-    });    
+    reformatJoinedUserResult(result, cb);    
   });
 };
 
+reformatJoinedUserResult = (result, cb) => {
+  var counter = 0;
+  var user = {};
+  result.forEach((obj) => {
+    //manually create the user object
+    user.userId = obj.userId;
+    user.username = obj.username;
+    user.password = obj.password;
+    user.role = obj.role;
+    user.fullname = obj.fullname;
+    user.address = obj.address;
+    user.phone = obj.phone;
+
+    //add user object to result
+    result[counter].userId = user;
+
+    //remove misplaced values
+    delete result[counter].username;
+    delete result[counter].password;
+    delete result[counter].role;
+    delete result[counter].fullname;
+    delete result[counter].address;
+    delete result[counter].phone;
+
+    counter++;
+    user = {};  //reset
+  });
+
+  cb(null, result);  //done
+}
+
 exports.getAllItemsFromOrder = (orderId, cb) => {
-  db.query("SELECT orderId, carId FROM tbl_orderitem WHERE orderId=?", orderId, (err, result) => {
+  var sql = `SELECT * FROM tbl_orderitem 
+             JOIN tbl_car ON tbl_car.carId = tbl_orderitem.carId
+             WHERE tbl_orderitem.orderId = ?`;
+
+  db.query(sql, orderId, (err, result) => {
     if(err)
       return cb(err, null);
     if(result.length === 0)
       return cb(`orderId=${orderId} does not exist`, null);
 
-    var counter = 0;
-    result.forEach((obj) => {
-      db.query("SELECT * FROM tbl_car WHERE carId=?", obj.carId, (err, carObj) => {
-        //replace carId with its object version
-        result[counter].carId = carObj[0];  
-
-        counter++;
-        if(counter === result.length) {
-          cb(null, result);
-        } 
-      });
-    });    
+    reformatJoinedCarResult(result, cb);  
   });
 };
+
+reformatJoinedCarResult = (result, cb) => {
+  var counter = 0;
+  var car = {};
+  result.forEach((obj) => {
+    //manually create the car object
+    car.carId = obj.carId;
+    car.type = obj.type;
+    car.make = obj.make;
+    car.model = obj.model;
+    car.year = obj.year;
+    car.price = obj.price;
+    car.numAvailable = obj.numAvailable;
+    car.carspecId = obj.carspecId;
+    car.diagonalView = obj.diagonalView;
+    car.sideView = obj.sideView;
+    car.interiorView = obj.interiorView;
+
+    //add car object to result
+    result[counter].carId = car;
+
+    //remove misplaced values
+    delete result[counter].type;
+    delete result[counter].make;
+    delete result[counter].model;
+    delete result[counter].year;
+    delete result[counter].price;
+    delete result[counter].numAvailable;
+    delete result[counter].carspecId;
+    delete result[counter].diagonalView;
+    delete result[counter].sideView;
+    delete result[counter].interiorView;
+
+    //keep just orderId and carId object
+    delete result[counter].orderitemId;
+
+    counter++;
+    car = {};  //reset
+  });
+
+  cb(null, result);  //done
+}
+
 
 exports.addOrder = (order, cb) => {
   var totalPrice = 0;
@@ -91,7 +151,7 @@ updateNumCarsAvailable = (order, cb) => {
   var carsMap = new Map();
   var boughtCarsArray = order.boughtCars;
 
-  //store bought car quantities in a map
+  //save bought car quantities in a map
   for(var i=0; i<boughtCarsArray.length; i++) {
     if(carsMap.has(boughtCarsArray[i]))
       carsMap.set(boughtCarsArray[i], carsMap.get(boughtCarsArray[i]) + 1);
