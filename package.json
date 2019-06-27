@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "mocha",
-    "start": "nodemon server.js"
+    "start": "nodemon local.js"
   },
   "repository": {
     "type": "git",
@@ -14,6 +14,7 @@
   "author": "vien",
   "license": "ISC",
   "dependencies": {
+    "aws-serverless-express": "^3.3.6",
     "body-parser": "^1.19.0",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
