@@ -16,6 +16,6 @@ app.use(bodyParser.json());
 //register the controllers
 app.use(require("./controller/CustomerController"));
 
-app.listen(3000, () => {
-  console.log("Server Running at port 3000");
+app.listen(3005, () => {
+  console.log("Server Running at port 3005");
 });
